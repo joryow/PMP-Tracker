@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My PMP Study Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #0F9B6E; --green-light: #E0F5EE; --green-mid: #9FE1CB;
+    --amber: #F59E0B; --amber-light: #FEF3C7;
+    --bg: #F7F8FA; --surface: #FFFFFF; --border: #E5E7EB;
+    --text: #111827; --muted: #6B7280;
+    --phase1: #8B5CF6; --phase1-light: #F3F0FF;
+    --phase2: #3B82F6; --phase2-light: #EFF6FF;
+    --phase3: #F59E0B; --phase3-light: #FEF3C7;
+    --phase4: #10B981; --phase4-light: #ECFDF5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .top-bar { background: var(--green); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+  .top-bar-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: #fff; }
+  .top-bar-sub { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+  .top-badge { background: rgba(255,255,255,0.2); color: #fff; font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 99px; white-space: nowrap; }
+  .main { max-width: 740px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; }
+  .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: var(--green); line-height: 1; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .progress-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 1.25rem; }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .progress-label { font-size: 13px; font-weight: 500; }
+  .progress-pct { font-size: 13px; font-weight: 600; color: var(--green); }
+  .progress-track { background: var(--bg); border-radius: 99px; height: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--green), #34D399); transition: width 0.5s; }
+  .phases { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .phase-btn { font-size: 13px; font-weight: 500; padding: 7px 16px; border-radius: 99px; border: 1.5px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .phase-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+  .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 1.25rem 0 0.6rem; }
+  .week-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; overflow: hidden; }
+  .week-card.done { border-color: var(--green-mid); background: var(--green-light); }
+  .week-card.current { border-color: var(--amber); }
+  .week-header { display: flex; align-items: center; gap: 10px; padding: 13px 15px; cursor: pointer; }
+  .week-pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px; min-width: 72px; text-align: center; background: var(--bg); color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
+  .week-pill.done { background: var(--green-light); color: var(--green); border-color: var(--green-mid); }
+  .week-pill.current { background: var(--amber-light); color: #92400E; border-color: var(--amber); }
+  .week-title-text { flex: 1; font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.4; }
+  .week-card.done .week-title-text { color: #065F46; }
+  .week-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .week-hrs-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #EFF6FF; color: #1D4ED8; }
+  .check-btn { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+  .check-btn.checked { background: var(--green); border-color: var(--green); }
+  .check-icon { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; display: none; }
+  .check-btn.checked .check-icon { display: block; }
+  .chevron { width: 15px; height: 15px; stroke: var(--muted); fill: none; stroke-width: 2; transition: transform 0.2s; flex-shrink: 0; }
+  .week-card.open .chevron { transform: rotate(180deg); }
+  .week-body { padding: 0 15px 15px; border-top: 1px solid var(--border); display: none; }
+  .week-card.open .week-body { display: block; }
+  .week-card.done .week-body { border-color: var(--green-mid); }
+  .hrs-info { margin: 12px 0 10px; padding: 10px 13px; background: #EFF6FF; border-radius: 10px; border-left: 3px solid #3B82F6; }
+  .hrs-info-title { font-size: 12px; font-weight: 600; color: #1D4ED8; margin-bottom: 3px; }
+  .hrs-info-text { font-size: 13px; color: #1E40AF; line-height: 1.5; }
+  .task-section { margin: 12px 0 6px; }
+  .task-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 6px; }
+  .task-list { list-style: none; }
+  .task-list li { font-size: 13.5px; color: #374151; padding: 5px 0; display: flex; gap: 9px; line-height: 1.5; border-bottom: 1px dashed #F3F4F6; }
+  .task-list li:last-child { border-bottom: none; }
+  .task-list li::before { content: "→"; color: var(--green); flex-shrink: 0; font-weight: 700; }
+  .week-card.done .task-list li { color: #047857; }
+  .resources-section { margin: 12px 0 10px; }
+  .resources-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; }
+  .resource-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: 9px; margin-bottom: 6px; text-decoration: none; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
+  .resource-item:hover { border-color: var(--green); background: var(--green-light); }
+  .resource-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; flex-shrink: 0; margin-top: 1px; }
+  .badge-free { background: #DCFCE7; color: #166534; }
+  .badge-paid { background: #FEF9C3; color: #854D0E; }
+  .badge-official { background: #DBEAFE; color: #1E40AF; }
+  .resource-text { flex: 1; }
+  .resource-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .resource-desc { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .teach-btn { width: 100%; margin-top: 10px; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--green); background: transparent; color: var(--green); font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; font-family: 'Inter', sans-serif; transition: background 0.15s; }
+  .teach-btn:hover { background: var(--green-light); }
+  .phase-tag { display: inline-flex; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 99px; margin: 12px 0 6px; }
+  .tag-1 { background: var(--phase1-light); color: var(--phase1); }
+  .tag-2 { background: var(--phase2-light); color: #1D4ED8; }
+  .tag-3 { background: var(--phase3-light); color: #92400E; }
+  .tag-4 { background: var(--phase4-light); color: #065F46; }
+  .coach-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem 1.5rem; margin-top: 1.5rem; }
+  .coach-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .coach-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .coach-name { font-size: 15px; font-weight: 600; }
+  .coach-sub { font-size: 12px; color: var(--muted); }
+  .coach-msg { font-size: 14px; color: var(--muted); line-height: 1.7; background: var(--bg); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+  .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .quick-btn { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; font-family: 'Inter', sans-serif; transition: all 0.15s; line-height: 1.4; }
+  .quick-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+  .quick-btn span { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .note-box { background: var(--amber-light); border: 1px solid #FDE68A; border-radius: 12px; padding: 12px 16px; margin-top: 1rem; font-size: 13px; color: #92400E; line-height: 1.6; }
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .quick-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div>
+    <div class="top-bar-title">🎯 My PMP Study Tracker</div>
+    <div class="top-bar-sub">Target: Sep–Oct 2026 · ~3–4 hrs/week · New 2026 Exam Format</div>
+  </div>
+  <div class="top-badge">18 weeks</div>
+</div>
+<div class="main">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="s-done">0</div><div class="stat-label">Weeks done</div></div>
+    <div class="stat-card"><div class="stat-num">18</div><div class="stat-label">Total weeks</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-hrs">0</div><div class="stat-label">Hours logged</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-pct">0%</div><div class="stat-label">Complete</div></div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-header">
+      <span class="progress-label">Overall progress</span>
+      <span class="progress-pct" id="p-pct">0% complete</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="p-fill" style="width:0%"></div></div>
+  </div>
+  <div class="phases">
+    <button class="phase-btn active" onclick="setPhase('all',this)">All phases</button>
+    <button class="phase-btn" onclick="setPhase('1',this)">📋 Phase 1 — Apply</button>
+    <button class="phase-btn" onclick="setPhase('2',this)">📚 Phase 2 — Study</button>
+    <button class="phase-btn" onclick="setPhase('3',this)">✏️ Phase 3 — Practice</button>
+    <button class="phase-btn" onclick="setPhase('4',this)">🎯 Phase 4 — Exam</button>
+  </div>
+  <div id="week-list"></div>
+  <div class="coach-panel">
+    <div class="coach-header">
+      <div class="coach-avatar">
+        <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M20 21v-1a8 8 0 0 0-16 0v1"/></svg>
+      </div>
+      <div>
+        <div class="coach-name">Your AI Study Coach</div>
+        <div class="coach-sub">Powered by Claude · Ask me anything about PMP</div>
+      </div>
+    </div>
+    <div class="coach-msg">👋 Hi! I'm your PMP coach. Tick off weeks as you complete them, and expand any week to see your tasks, hour breakdown, and free resources with links. Use the quick buttons below to get help anytime. You've got this! 💪</div>
+    <div class="quick-grid">
+      <button class="quick-btn" onclick="copyQ('I just started my PMP study plan targeting the new 2026 exam. What are the 3 most important things I should focus on first as a busy experienced PM?')">Where to start?<span>Top priorities for week 1</span></button>
+      <button class="quick-btn" onclick="copyQ('Give me 5 PMP practice exam questions for the new 2026 exam format on Agile and hybrid project management. Show the correct answer and explain why for each.')">Practice questions<span>5 questions with answers</span></button>
+      <button class="quick-btn" onclick="copyQ('Explain the new 2026 PMP exam domains, weightings, and what is new compared to the old exam in simple terms for a busy experienced PM')">New 2026 ECO explained<span>What changed and why</span></button>
+      <button class="quick-btn" onclick="copyQ('What are the basics of AI in project management I need to know for the new PMP 2026 exam? Give me a simple summary with real-world examples.')">AI in PM basics<span>New 2026 exam topic</span></button>
+      <button class="quick-btn" onclick="copyQ('I am a busy parent with 2 kids studying for PMP with only 3-4 hours per week. Give me 5 practical tips to stay consistent and motivated.')">Stay motivated<span>Tips for busy parents</span></button>
+      <button class="quick-btn" onclick="copyQ('How do I think like PMI in the PMP exam? What is the PMI mindset and how do I apply it to scenario-based questions in the new 2026 exam?')">Think like PMI<span>Crack the exam mindset</span></button>
+    </div>
+    <div class="note-box" style="margin-top:1rem;">💡 <strong>How to use the coach buttons:</strong> Click any button — it copies the question. Open <strong>claude.ai</strong>, paste it, and your AI coach answers instantly. Each week card also has a "Teach me this topic" button.</div>
+  </div>
+</div>
+
+<script>
+const WEEKS = [
+  {
+    phase:'1', w:1, title:'Create PMI account + enroll in 35-hr course', hrs:2,
+    hrsBreakdown:'1 hr: Set up PMI account and explore the site. 1 hr: Research and enroll in a 35-contact-hour course.',
+    tasks:['Create a free account at PMI.org — you need this to apply and book your exam','Download the free 2026 PMP Exam Content Outline (ECO) PDF — search "PMP ECO 2026" on PMI.org','Browse course options below and enroll in one that offers a certificate of completion'],
+    resources:[
+      {name:'PMI.org — Create your account', desc:'Official PMI member portal. Free to join.', url:'https://www.pmi.org', badge:'official'},
+      {name:'PMI 2026 ECO Download', desc:'Free PDF — your exam syllabus. Download and save this.', url:'https://www.pmi.org/certifications/project-management-pmp', badge:'free'},
+      {name:'Udemy — Andrew Ramdayal PMP Course', desc:'Best-rated PMP course. Usually RM40–60 on sale. Includes 35-hr certificate.', url:'https://www.udemy.com/course/pmp-certification-exam-prep-course-pmbok-6-icagile/', badge:'paid'},
+      {name:'Coursera — Google Project Management', desc:'Free to audit. Covers PM fundamentals. Good for contact hours if you track manually.', url:'https://www.coursera.org/professional-certificates/google-project-management', badge:'free'},
+    ]
+  },
+  {
+    phase:'1', w:2, title:'35 contact hours — weeks 2 & 3 (split across 2 weeks)', hrs:3,
+    hrsBreakdown:'You need exactly 35 contact hours total — split across Week 2 and Week 3. Aim for 17–18 hours this week. Watch ~3 hrs of course videos per study session across 5–6 sessions. Take brief notes as you go — you will use them later.',
+    tasks:['Watch course videos on project fundamentals: lifecycles, project vs operations, project constraints','Study initiation and planning processes: project charter, stakeholder identification, scope definition','Learn the difference between predictive (waterfall), agile, and hybrid approaches — the exam tests all three','Note down any confusing terms — ask your AI coach to explain them simply'],
+    resources:[
+      {name:'Andrew Ramdayal — free YouTube lessons', desc:'Top-rated PMP instructor. Watch his free "PMP Exam Tips" series on YouTube.', url:'https://www.youtube.com/@TiaEducation', badge:'free'},
+      {name:'David McLachlan — PMP YouTube channel', desc:'Excellent free PMP content covering all domains. Great for commute watching.', url:'https://www.youtube.com/@DavidMcLachlan1', badge:'free'},
+      {name:'PMBOK Guide 8th Edition', desc:'Free with PMI membership ($139/yr). Worth it — also saves $121 on exam fee.', url:'https://www.pmi.org/pmbok-guide-standards', badge:'official'},
+      {name:'Agile Practice Guide', desc:'Free with PMI membership. Read chapters 1–3 this week — covers agile mindset.', url:'https://www.pmi.org/pmbok-guide-standards/practice-guides/agile', badge:'official'},
+    ]
+  },
+  {
+    phase:'1', w:3, title:'Complete 35 contact hours + start PMI application', hrs:4,
+    hrsBreakdown:'2 hrs: Finish remaining course videos to hit the 35-hr mark. 1 hr: Download and save your certificate of completion. 1 hr: Start filling in your PMI application — document your project experience.',
+    tasks:['Finish all remaining course videos to reach the 35-hour minimum','Download your certificate of completion from the course platform — keep it safe','Log into PMI.org and start your application: under "Certifications" → "Apply for PMP"','Document 3–5 projects you have led: project name, your role, dates, hours spent leading'],
+    resources:[
+      {name:'PMI PMP Application guide', desc:'Step-by-step official guide on how to fill in your experience hours.', url:'https://www.pmi.org/certifications/project-management-pmp/earn-the-pmp/how-to-apply', badge:'official'},
+      {name:'Reddit r/pmp — Application Tips', desc:'Real candidates share how they documented their experience. Very helpful.', url:'https://www.reddit.com/r/pmp/', badge:'free'},
+      {name:'PM PrepCast — Application helper', desc:'Paid tool but has a free sample to see how to structure your project descriptions.', url:'https://www.pm-prepcast.com/pmp-application', badge:'paid'},
+    ]
+  },
+  {
+    phase:'1', w:4, title:'Submit PMI application + pay exam fee', hrs:2,
+    hrsBreakdown:'1 hr: Final review and submit your application online. 0.5 hr: Pay the exam fee. 0.5 hr: Check if your company can reimburse via HRD Corp (Malaysia) — could save you RM1,900.',
+    tasks:['Complete the application form on PMI.org — double-check all project hours add up correctly','Submit your application and wait for approval (usually 5–10 business days)','Once approved, pay the exam fee: USD $284 (PMI member) or USD $405 (non-member)','Ask your HR team if the company can sponsor via HRD Corp / HRDF levy'],
+    resources:[
+      {name:'HRD Corp Malaysia — Training Claims', desc:'Your employer may be able to claim PMP course and exam fees. Ask HR.', url:'https://www.hrdcorp.gov.my', badge:'official'},
+      {name:'PMI Exam Fees page', desc:'Official breakdown of all PMP fees including member vs non-member rates.', url:'https://www.pmi.org/certifications/project-management-pmp/earn-the-pmp/exam-fees', badge:'official'},
+    ]
+  },
+  {
+    phase:'2', w:5, title:'New 2026 ECO deep dive — domains and weightings', hrs:3,
+    hrsBreakdown:'1.5 hrs: Read the full 2026 ECO (about 30 pages). 1 hr: Highlight key tasks and enablers per domain. 0.5 hr: Compare the 3 domains and understand the weightings.',
+    tasks:['Read the 2026 ECO cover to cover — do not skip this, it IS your exam syllabus','Note the 3 domains: People, Process, Business Environment and their approximate weightings','Understand what "tasks" and "enablers" mean in the ECO — exam questions map directly to tasks','Highlight anything that surprises you and ask your AI coach to explain it'],
+    resources:[
+      {name:'PMI 2026 ECO PDF (direct download)', desc:'The official exam syllabus. Free. This is the single most important document.', url:'https://www.pmi.org/certifications/project-management-pmp', badge:'official'},
+      {name:'Edoxi — 2026 ECO changes explained', desc:'Good article summarising what changed vs the old exam. Quick read.', url:'https://www.edoxi.com/studyhub-detail/pmp-exam-updates', badge:'free'},
+      {name:'OnlinePMCourses — 2026 exam breakdown', desc:'Detailed breakdown of all new domains and tasks for 2026.', url:'https://onlinepmcourses.com/2026-pmp-exam-for-candidates-all-the-essentials-you-need-to-know/', badge:'free'},
+    ]
+  },
+  {
+    phase:'2', w:6, title:'Predictive (waterfall) approach', hrs:3,
+    hrsBreakdown:'1 hr: Study the 5 process groups. 1 hr: Learn key project documents. 1 hr: Watch a YouTube video and do 10 practice questions on predictive PM.',
+    tasks:['Study the 5 process groups: initiating, planning, executing, monitoring & controlling, closing','Learn the key documents: project charter, WBS, project management plan, risk register','Understand the iron triangle: scope, schedule, cost — and how changes affect each other','Do 10 practice questions focused on predictive project management'],
+    resources:[
+      {name:'David McLachlan — Predictive PM videos', desc:'Free YouTube series. Watch "PMBOK Process Groups" playlist.', url:'https://www.youtube.com/@DavidMcLachlan1', badge:'free'},
+      {name:'PMBOK 8th Edition (free with PMI membership)', desc:'Chapters on predictive approach and standard for project management.', url:'https://www.pmi.org/pmbok-guide-standards', badge:'official'},
+      {name:'ExamTopics — Free PMP Questions', desc:'Free practice questions. Filter by predictive/waterfall topics.', url:'https://www.examtopics.com/exams/pmi/pmp/', badge:'free'},
+    ]
+  },
+  {
+    phase:'2', w:7, title:'Agile fundamentals — Scrum', hrs:3,
+    hrsBreakdown:'1 hr: Learn Scrum framework and roles. 1 hr: Read the Agile Manifesto and 12 principles. 1 hr: Watch a Scrum video and do 10 practice questions.',
+    tasks:['Learn the 3 Scrum roles: Product Owner, Scrum Master, Development Team — and what each does','Understand Scrum events: sprint, sprint planning, daily standup, sprint review, retrospective','Read the full Agile Manifesto at agilemanifesto.org — it is only one page, memorise the 4 values','Do 10 practice questions on Scrum and agile mindset'],
+    resources:[
+      {name:'Agile Manifesto — official site', desc:'The original 4 values and 12 principles. Free. Read and re-read this.', url:'https://agilemanifesto.org', badge:'free'},
+      {name:'Scrum Guide 2020 (official, free)', desc:'The definitive Scrum reference. Only 13 pages. Free PDF download.', url:'https://scrumguides.org/scrum-guide.html', badge:'free'},
+      {name:'Agile Practice Guide — PMI', desc:'Free with PMI membership. Read chapters 1–3 for agile mindset.', url:'https://www.pmi.org/pmbok-guide-standards/practice-guides/agile', badge:'official'},
+      {name:'YouTube — "What is Scrum?" by Atlassian', desc:'Clear 8-minute video explaining Scrum. Great for commute.', url:'https://www.youtube.com/results?search_query=scrum+explained+atlassian', badge:'free'},
+    ]
+  },
+  {
+    phase:'2', w:8, title:'Agile — Kanban and other frameworks', hrs:3,
+    hrsBreakdown:'1 hr: Study Kanban and WIP limits. 1 hr: High-level overview of SAFe. 1 hr: Practice questions on choosing between agile frameworks.',
+    tasks:['Study Kanban: visualise work, limit WIP (work in progress), manage flow, continuous delivery','Understand SAFe (Scaled Agile Framework) at a high level — know it exists and when it is used','Learn when to choose which framework: Scrum for complex products, Kanban for operational work','Do 10 practice questions on agile framework selection — the exam loves this topic'],
+    resources:[
+      {name:'Kanban Guide (free PDF)', desc:'Official Kanban guide. Short and practical. Free download.', url:'https://kanbanguides.org', badge:'free'},
+      {name:'SAFe — Scaled Agile overview', desc:'Free overview of SAFe framework on their official site.', url:'https://scaledagileframework.com', badge:'free'},
+      {name:'Andrew Ramdayal — Agile vs Waterfall video', desc:'Excellent free YouTube video on how to think about hybrid and agile for PMP.', url:'https://www.youtube.com/@TiaEducation', badge:'free'},
+    ]
+  },
+  {
+    phase:'2', w:9, title:'Hybrid project management', hrs:3,
+    hrsBreakdown:'1 hr: Study hybrid concepts and tailoring. 1 hr: Work through hybrid exam scenarios. 1 hr: Do 15 practice questions on hybrid approaches.',
+    tasks:['Learn how to blend predictive planning with agile execution — most real projects are hybrid','Understand tailoring: choosing and adapting your approach based on project context','Study common hybrid patterns: agile delivery with predictive governance and reporting','Do 15 practice questions on hybrid scenarios — most PMP exam questions are hybrid'],
+    resources:[
+      {name:'PMI — Disciplined Agile overview', desc:'Free overview of PMIs hybrid approach toolkit on PMI.org.', url:'https://www.pmi.org/disciplined-agile', badge:'official'},
+      {name:'Agile Practice Guide — Chapter 4', desc:'Covers hybrid approaches and tailoring. Free with PMI membership.', url:'https://www.pmi.org/pmbok-guide-standards/practice-guides/agile', badge:'official'},
+      {name:'ScrumConsult — 2026 exam hybrid article', desc:'Good article on hybrid questions in the new 2026 exam format.', url:'https://scrumconsult.com/new-pmp-exam-content-outline-eco-2026/', badge:'free'},
+    ]
+  },
+  {
+    phase:'2', w:10, title:'Stakeholder and communications management', hrs:3,
+    hrsBreakdown:'1 hr: Stakeholder identification and analysis tools. 1 hr: Communications planning. 1 hr: Practice questions on stakeholder and comms scenarios.',
+    tasks:['Learn stakeholder identification: who are they, what do they want, how do you engage them','Study the power/interest grid and stakeholder engagement assessment matrix','Understand communications planning: who gets what information, how often, in what format','Do 15 practice questions — stakeholder scenarios are very common in the 2026 exam'],
+    resources:[
+      {name:'PMI — Stakeholder management guide', desc:'Free article on PMI.org covering stakeholder engagement best practices.', url:'https://www.pmi.org/learning/library', badge:'free'},
+      {name:'David McLachlan — Stakeholder videos', desc:'Free YouTube videos on PMP stakeholder management topic.', url:'https://www.youtube.com/@DavidMcLachlan1', badge:'free'},
+      {name:'ExamTopics — Stakeholder practice Qs', desc:'Free practice questions. Filter by stakeholder management.', url:'https://www.examtopics.com/exams/pmi/pmp/', badge:'free'},
+    ]
+  },
+  {
+    phase:'2', w:11, title:'Risk management', hrs:3,
+    hrsBreakdown:'1 hr: Risk identification and analysis. 1 hr: Risk response strategies. 1 hr: Practice questions on risk scenarios.',
+    tasks:['Learn the risk management process: identify → analyse → plan responses → implement → monitor','Understand qualitative vs quantitative risk analysis — know when to use each','Study the 4 risk response strategies: avoid, transfer, mitigate, accept (for threats)','In agile: understand how risks are managed in the backlog and sprint level'],
+    resources:[
+      {name:'PMI — Risk Management guide (free)', desc:'Free article on PMI.org covering risk management fundamentals.', url:'https://www.pmi.org/learning/library', badge:'free'},
+      {name:'YouTube — PMP Risk Management explained', desc:'Search "PMP risk management 2026" for free video explanations.', url:'https://www.youtube.com/results?search_query=PMP+risk+management+2026', badge:'free'},
+      {name:'ExamTopics — Risk practice questions', desc:'Free practice questions filtered by risk management.', url:'https://www.examtopics.com/exams/pmi/pmp/', badge:'free'},
+    ]
+  },
+  {
+    phase:'2', w:12, title:'Schedule and cost management', hrs:3,
+    hrsBreakdown:'1 hr: Critical Path Method (CPM) and scheduling. 1 hr: Earned Value Management (EVM) formulas. 1 hr: Practice EVM calculations and schedule questions.',
+    tasks:['Learn Critical Path Method: identify the longest path, calculate float, find the critical path','Study Earned Value Management: EV, PV, AC, SPI, CPI, EAC, VAC — know all formulas','In agile: story points, velocity, burn-down charts, burn-up charts','Do 15 practice questions including at least 5 EVM calculation questions'],
+    resources:[
+      {name:'EVM formula cheat sheet (free PDF)', desc:'Search "PMP EVM formulas cheat sheet PDF" — many free versions online.', url:'https://www.google.com/search?q=PMP+EVM+formulas+cheat+sheet+PDF+free', badge:'free'},
+      {name:'YouTube — CPM explained simply', desc:'Search "critical path method PMP explained" for free 10-min videos.', url:'https://www.youtube.com/results?search_query=critical+path+method+PMP+explained', badge:'free'},
+      {name:'PMI — Earned Value Practice Standard', desc:'Official EVM reference. Free with PMI membership.', url:'https://www.pmi.org/pmbok-guide-standards', badge:'official'},
+    ]
+  },
+  {
+    phase:'2', w:13, title:'Quality and procurement management', hrs:3,
+    hrsBreakdown:'1 hr: Quality planning, assurance, and control. 1 hr: Contract types and procurement. 1 hr: Practice questions on quality and procurement.',
+    tasks:['Know the difference: quality planning vs quality assurance vs quality control','Learn the 3 contract types: fixed price, time and materials, cost-reimbursable — and when to use each','In agile: definition of done, acceptance criteria, continuous testing and integration','Do 15 practice questions on quality and procurement scenarios'],
+    resources:[
+      {name:'YouTube — PMP Quality Management', desc:'Search "PMP quality management explained 2026" for free videos.', url:'https://www.youtube.com/results?search_query=PMP+quality+management+explained', badge:'free'},
+      {name:'YouTube — PMP Contract Types', desc:'Search "PMP contract types explained" — short clear videos available free.', url:'https://www.youtube.com/results?search_query=PMP+contract+types+explained', badge:'free'},
+    ]
+  },
+  {
+    phase:'2', w:14, title:'Team leadership and servant leadership', hrs:3,
+    hrsBreakdown:'1 hr: PMI leadership model and servant leadership mindset. 1 hr: Conflict resolution and team development. 1 hr: Practice leadership scenario questions.',
+    tasks:['Understand servant leadership — the dominant mindset in the 2026 PMP exam for PMs','Learn Tuckman team development stages: forming, storming, norming, performing, adjourning','Study conflict resolution styles: collaborating (preferred), compromising, forcing, avoiding, accommodating','Do 15 practice questions on leadership and people management scenarios'],
+    resources:[
+      {name:'Andrew Ramdayal — Leadership mindset video', desc:'Free YouTube video on how PMI expects you to lead as a project manager.', url:'https://www.youtube.com/@TiaEducation', badge:'free'},
+      {name:'PMI — Leadership in Project Management', desc:'Free article on PMI.org on servant leadership and the agile leader.', url:'https://www.pmi.org/learning/library', badge:'free'},
+    ]
+  },
+  {
+    phase:'2', w:15, title:'AI in project management (brand new for 2026!)', hrs:3,
+    hrsBreakdown:'1 hr: Read about AI applications in project management. 1 hr: Study ethical considerations of AI use. 1 hr: Practice questions on AI-related PM scenarios.',
+    tasks:['Learn how AI tools support PM: risk identification, schedule optimisation, resource planning, reporting','Understand AI-assisted monitoring: automated status reports, anomaly detection, predictive analytics','Study the ethical considerations: bias in AI, data privacy, human oversight, accountability','This is explicitly new in 2026 — do not skip it. The exam will have AI-related scenarios.'],
+    resources:[
+      {name:'PMI — AI in Project Management (free)', desc:'PMI has published free articles and reports on AI for project managers.', url:'https://www.pmi.org/learning/library', badge:'free'},
+      {name:'YouTube — AI tools for project managers', desc:'Search "AI project management 2025 2026" for practical overview videos.', url:'https://www.youtube.com/results?search_query=AI+tools+for+project+managers+2025', badge:'free'},
+      {name:'Edoxi — AI in PMP 2026 exam article', desc:'Good article covering what you need to know about AI for the new exam.', url:'https://www.edoxi.com/studyhub-detail/pmp-exam-updates', badge:'free'},
+    ]
+  },
+  {
+    phase:'2', w:16, title:'Sustainability and business environment', hrs:3,
+    hrsBreakdown:'1 hr: ESG and sustainability in projects. 1 hr: Benefits realisation and value delivery. 1 hr: Practice questions on business environment domain.',
+    tasks:['Learn ESG (Environmental, Social, Governance) thinking as applied to project delivery','Understand benefits realisation: how projects deliver value beyond just delivery of outputs','Study strategic alignment: how projects connect to organisational goals and OKRs','The Business Environment domain is growing in the 2026 exam — do not underestimate it'],
+    resources:[
+      {name:'PMI — Sustainability in PM (free)', desc:'Free PMI article and podcast on sustainable project management practices.', url:'https://www.pmi.org/learning/library', badge:'free'},
+      {name:'PMBOK 8th Edition — Business environment sections', desc:'Free with PMI membership. Covers benefits realisation and strategic alignment.', url:'https://www.pmi.org/pmbok-guide-standards', badge:'official'},
+    ]
+  },
+  {
+    phase:'3', w:17, title:'Full practice exam — all domains', hrs:4,
+    hrsBreakdown:'2 hrs: Complete 90 practice questions (half of the exam). 1 hr: Review every wrong answer in detail. 1 hr: Note your 3 weakest topics and make a revision plan.',
+    tasks:['Complete 90 practice questions covering People, Process, and Business Environment domains','Review EVERY wrong answer — understand WHY it is wrong, not just what is right','Identify your 3 weakest areas and schedule extra revision in the days ahead','Target score to feel confident: above 70% on practice questions before booking the real exam'],
+    resources:[
+      {name:'PMI Official Practice Exam', desc:'Paid. 200 official questions from PMI. Most accurate to real exam style.', url:'https://www.pmi.org/certifications/project-management-pmp/earn-the-pmp/pmp-exam-prep', badge:'paid'},
+      {name:'PM PrepCast Exam Simulator', desc:'Paid but excellent. 1,800+ questions aligned to 2026 exam format.', url:'https://www.pm-prepcast.com/pmp-practice-exam', badge:'paid'},
+      {name:'ExamTopics — Free PMP questions', desc:'Free practice questions with community explanations. Good for supplementary practice.', url:'https://www.examtopics.com/exams/pmi/pmp/', badge:'free'},
+      {name:'Reddit r/pmp — Question of the day', desc:'Active community sharing daily practice questions and exam tips.', url:'https://www.reddit.com/r/pmp/', badge:'free'},
+    ]
+  },
+  {
+    phase:'4', w:18, title:'Full mock exam + book your real exam date', hrs:5,
+    hrsBreakdown:'3.5 hrs: Full 180-question timed mock exam (simulate real exam conditions — no breaks unless allowed). 1 hr: Review results and weak areas. 0.5 hr: Log into PMI.org and book your exam date.',
+    tasks:['Complete a full 180-question timed mock exam — set a 230-minute timer, no cheating!','Simulate real exam conditions: quiet room, no phone, take only the allowed breaks','Review your results — if above 70%, you are ready. If below, revise weak areas for 1 more week','Log into PMI.org → Pearson VUE → Book your exam for September or October — commit to a date!'],
+    resources:[
+      {name:'Pearson VUE — Book PMP exam', desc:'Official exam booking portal. Online proctored or test centre in KL available.', url:'https://home.pearsonvue.com/pmi', badge:'official'},
+      {name:'PMI PrepCast — Full mock exams', desc:'Best full-length mock exams aligned to 2026 format. Paid but worth it before real exam.', url:'https://www.pm-prepcast.com/pmp-practice-exam', badge:'paid'},
+      {name:'Reddit r/pmp — Exam day tips', desc:'Read recent pass reports — real candidates share what the exam was like and tips.', url:'https://www.reddit.com/r/pmp/search/?q=passed&sort=new', badge:'free'},
+    ]
+  },
+];
+
+const PHASE_LABELS = {'1':'Phase 1 — Apply','2':'Phase 2 — Study','3':'Phase 3 — Practice','4':'Phase 4 — Exam'};
+const PHASE_COLORS = {'1':'tag-1','2':'tag-2','3':'tag-3','4':'tag-4'};
+const KEY = 'pmp_v4_checked';
+let checked = [], curPhase = 'all', openIdx = null;
+
+function load() { try { checked = JSON.parse(localStorage.getItem(KEY))||[]; } catch(e){ checked=[]; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(checked)); } catch(e){} }
+function todayWeek() {
+  const diff = Math.floor((new Date()-new Date('2026-06-18'))/(7*24*3600*1000));
+  return Math.max(0,Math.min(diff,WEEKS.length-1));
+}
+function setPhase(p,el){ curPhase=p; document.querySelectorAll('.phase-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); render(); }
+function toggle(i){ openIdx=openIdx===i?null:i; render(); }
+function mark(i,e){ e.stopPropagation(); const x=checked.indexOf(i); if(x===-1) checked.push(i); else checked.splice(x,1); save(); updateStats(); render(); }
+function copyQ(q){
+  try { navigator.clipboard.writeText(q).then(()=>alert('✅ Question copied!\n\nOpen claude.ai and paste it — your AI coach will answer. 🎓')); }
+  catch(e){ const a=document.createElement('textarea'); a.value=q; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a); alert('✅ Question copied!\n\nOpen claude.ai and paste it — your AI coach will answer. 🎓'); }
+}
+function openLink(url){ window.open(url,'_blank'); }
+function updateStats(){
+  const done=checked.length, hrs=WEEKS.filter((_,i)=>checked.includes(i)).reduce((s,w)=>s+w.hrs,0), pct=Math.round(done/WEEKS.length*100);
+  document.getElementById('s-done').textContent=done;
+  document.getElementById('s-hrs').textContent=hrs;
+  document.getElementById('s-pct').textContent=pct+'%';
+  document.getElementById('p-pct').textContent=pct+'% complete';
+  document.getElementById('p-fill').style.width=pct+'%';
+}
+function render(){
+  const cur=todayWeek(), list=document.getElementById('week-list');
+  list.innerHTML=''; let lastPhase=null;
+  WEEKS.forEach((w,i)=>{
+    if(curPhase!=='all'&&w.phase!==curPhase) return;
+    const isDone=checked.includes(i), isCur=i===cur&&!isDone, isOpen=openIdx===i;
+    if(w.phase!==lastPhase){ const lbl=document.createElement('div'); lbl.className='section-label'; lbl.textContent=PHASE_LABELS[w.phase]; list.appendChild(lbl); lastPhase=w.phase; }
+    const card=document.createElement('div');
+    card.className='week-card'+(isDone?' done':'')+(isCur?' current':'')+(isOpen?' open':'');
+    const pillClass=isDone?'done':(isCur?'current':'');
+    const pillText=isDone?'✓ Done':(isCur?'This week':'Week '+w.w);
+    let bodyHTML='';
+    if(isOpen){
+      const resHTML=w.resources.map(r=>`<div class="resource-item" onclick="openLink('${r.url}')"><span class="resource-badge badge-${r.badge}">${r.badge.toUpperCase()}</span><div class="resource-text"><div class="resource-name">${r.name}</div><div class="resource-desc">${r.desc}</div></div></div>`).join('');
+      bodyHTML=`<div class="week-body">
+        <span class="phase-tag ${PHASE_COLORS[w.phase]}">${PHASE_LABELS[w.phase]}</span>
+        <div class="hrs-info"><div class="hrs-info-title">⏱ How to spend ${w.hrs} hours this week</div><div class="hrs-info-text">${w.hrsBreakdown}</div></div>
+        <div class="task-section"><div class="task-section-title">What to do</div><ul class="task-list">${w.tasks.map(t=>`<li>${t}</li>`).join('')}</ul></div>
+        <div class="resources-section"><div class="resources-title">📎 Resources & links</div>${resHTML}</div>
+        <button class="teach-btn" onclick="copyQ('I am on Week ${w.w} of my PMP 2026 study plan. Topic: ${w.title}. Teach me the key concepts I need to know for the new 2026 PMP exam in simple terms with real examples. I am an experienced PM so skip the basics and go straight to what matters.')">🎓 Ask AI coach to teach this week&apos;s topic →</button>
+      </div>`;
+    }
+    card.innerHTML=`<div class="week-header" onclick="toggle(${i})"><span class="week-pill ${pillClass}">${pillText}</span><span class="week-title-text">${w.title}</span><div class="week-meta"><span class="week-hrs-badge">${w.hrs}h</span><button class="check-btn ${isDone?'checked':''}" onclick="mark(${i},event)" aria-label="${isDone?'Mark incomplete':'Mark done'}"><svg class="check-icon" viewBox="0 0 12 9"><polyline points="1,5 4,8 11,1"/></svg></button><svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div></div>${bodyHTML}`;
+    list.appendChild(card);
+  });
+}
+load(); updateStats(); render();
+</script>
+</body>
+</html>
